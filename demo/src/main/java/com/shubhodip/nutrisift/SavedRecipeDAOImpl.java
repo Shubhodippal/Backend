@@ -19,20 +19,50 @@ public class SavedRecipeDAOImpl implements SavedRecipeDAO {
 
     @Override
     public int saveRecipe(SavedRecipe recipe) {
-        String sql = "INSERT INTO saved_recipe (uid, mail, prompt, recipe_name, ingredients, steps, calories, diet, origin, course, cuisine) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        return jdbcTemplate.update(sql, 
+        try {
+            // Validate required fields
+            if (recipe.getUid() == null || recipe.getMail() == null || recipe.getRecipeName() == null) {
+                System.err.println("Error: Required fields missing. uid, mail and recipe_name cannot be null");
+                return 0;
+            }
+            
+            // Trim and sanitize text fields to prevent SQL issues
+            String sanitizedIngredients = recipe.getIngredients() != null ? recipe.getIngredients().replace("'", "''") : null;
+            String sanitizedSteps = recipe.getSteps() != null ? recipe.getSteps().replace("'", "''") : null;
+            String sanitizedPrompt = recipe.getPrompt() != null ? recipe.getPrompt().replace("'", "''") : null;
+            
+            // Use the same column order as in your database
+            String sql = "INSERT INTO saved_recipe (uid, mail, prompt, recipe_name, ingredients, steps, " +
+                         "calories, diet, origin, course, cuisine) " +
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            return jdbcTemplate.update(
+                sql, 
                 recipe.getUid(), 
                 recipe.getMail(), 
-                recipe.getPrompt(), 
-                recipe.getRecipeName(), 
-                recipe.getIngredients(), 
-                recipe.getSteps(), 
+                sanitizedPrompt, 
+                recipe.getRecipeName(),
+                sanitizedIngredients, 
+                sanitizedSteps, 
                 recipe.getCalories(), 
                 recipe.getDiet(), 
                 recipe.getOrigin(), 
                 recipe.getCourse(), 
-                recipe.getCuisine());
+                recipe.getCuisine()
+            );
+        } catch (Exception e) {
+            System.err.println("Error in saveRecipe: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Try to provide more detailed error info
+            if (e.getMessage().contains("Data too long")) {
+                System.err.println("Data too long for column. Check field length limits.");
+            } else if (e.getMessage().contains("cannot be null")) {
+                System.err.println("Required field is null. Check uid, mail, and recipe_name.");
+            }
+            
+            return 0;
+        }
     }
 
     @Override
