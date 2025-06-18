@@ -1,4 +1,4 @@
-package com.shubhodip.nutrisift;
+package com.shubhodip.nutrisift.Grocery_list;
 
 import java.util.List;
 
@@ -14,16 +14,24 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.shubhodip.nutrisift.recipe.ApiUsageDAO; // Add this import
+
 @RestController
 @RequestMapping("/grocerylist")
 public class GroceryListController {
 
     @Autowired
     private GroceryListDAO groceryListDAO;
+    
+    @Autowired
+    private ApiUsageDAO apiUsageDAO; // Add this dependency
 
     @GetMapping("/{userId}")
     public ResponseEntity<GroceryListResponse> getGroceryList(@PathVariable String userId) {
         try {
+            // Track API usage
+            apiUsageDAO.trackApiUsage(userId, "unknown", "get-grocery-list");
+            
             List<GroceryItem> items = groceryListDAO.getGroceryList(userId);
             
             GroceryListResponse response = new GroceryListResponse();
@@ -43,14 +51,15 @@ public class GroceryListController {
     }
 
     @PostMapping("/{userId}")
-    public ResponseEntity<GroceryListResponse> saveGroceryList(
-            @PathVariable String userId, 
-            @RequestBody GroceryListRequest request) {
+    public ResponseEntity<GroceryListResponse> saveGroceryList(@PathVariable String userId, @RequestBody GroceryListRequest request) {
         try {
             // Get the user's email from the first item, or use a default
             String email = request.getItems().isEmpty() ? "user@example.com" : 
                           (request.getItems().get(0).getMail() != null ? 
                            request.getItems().get(0).getMail() : "user@example.com");
+            
+            // Track API usage
+            apiUsageDAO.trackApiUsage(userId, email, "save-grocery-list");
             
             boolean saved = groceryListDAO.saveGroceryList(userId, email, request.getItems());
             
@@ -105,10 +114,13 @@ public class GroceryListController {
     }
 
     @PutMapping("/item/{itemId}")
-    public ResponseEntity<GroceryListResponse> updateGroceryItem(
-            @PathVariable int itemId,
-            @RequestBody GroceryItem item) {
+    public ResponseEntity<GroceryListResponse> updateGroceryItem(@PathVariable long itemId, @RequestBody GroceryItem item) {
         try {
+            // Track API usage
+            String userId = item.getUid() != null ? item.getUid() : "unknown";
+            String email = item.getMail() != null ? item.getMail() : "unknown";
+            apiUsageDAO.trackApiUsage(userId, email, "update-grocery-item");
+            
             boolean updated = groceryListDAO.updateGroceryItem(itemId, item);
             
             GroceryListResponse response = new GroceryListResponse();
@@ -136,10 +148,13 @@ public class GroceryListController {
     }
 
     @DeleteMapping("/item/{itemId}")
-    public ResponseEntity<GroceryListResponse> deleteGroceryItem(
-            @PathVariable int itemId,
-            @RequestBody GroceryItem item) {  // Need the item to get the userId for the updated list
+    public ResponseEntity<GroceryListResponse> deleteGroceryItem(@PathVariable long itemId, @RequestBody GroceryItem item) {
         try {
+            // Track API usage
+            String userId = item.getUid() != null ? item.getUid() : "unknown";
+            String email = item.getMail() != null ? item.getMail() : "unknown";
+            apiUsageDAO.trackApiUsage(userId, email, "delete-grocery-item");
+            
             boolean deleted = groceryListDAO.deleteGroceryItem(itemId);
             
             GroceryListResponse response = new GroceryListResponse();
@@ -167,10 +182,13 @@ public class GroceryListController {
     }
     
     @PutMapping("/item/{itemId}/toggle")
-    public ResponseEntity<GroceryListResponse> toggleItemCheck(
-            @PathVariable int itemId,
-            @RequestBody GroceryItem item) {  // Need the item to get the userId for the updated list
+    public ResponseEntity<GroceryListResponse> toggleItemCheck(@PathVariable long itemId, @RequestBody GroceryItem item) {
         try {
+            // Track API usage
+            String userId = item.getUid() != null ? item.getUid() : "unknown";
+            String email = item.getMail() != null ? item.getMail() : "unknown";
+            apiUsageDAO.trackApiUsage(userId, email, "toggle-grocery-item");
+            
             boolean toggled = groceryListDAO.toggleItemCheck(itemId);
             
             GroceryListResponse response = new GroceryListResponse();

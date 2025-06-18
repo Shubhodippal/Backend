@@ -1,4 +1,4 @@
-package com.shubhodip.nutrisift;
+package com.shubhodip.nutrisift.Grocery_list;
 
 import java.util.List;
 

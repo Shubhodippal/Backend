@@ -19,7 +19,7 @@ import org.springframework.stereotype.Repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Repository
-public class SavedRecipeDAOImpl implements SavedRecipeDAO {
+public class RecipeDAOImpl implements RecipeDAO {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -76,7 +76,7 @@ public class SavedRecipeDAOImpl implements SavedRecipeDAO {
     }
 
     @Override
-    public SavedRecipe getRecipeById(int id) {
+    public SavedRecipe getRecipeById(long id) {
         try {
             String sql = "SELECT * FROM saved_recipe WHERE id = ?";
             return jdbcTemplate.queryForObject(sql, new SavedRecipeRowMapper(), id);
@@ -92,7 +92,7 @@ public class SavedRecipeDAOImpl implements SavedRecipeDAO {
     }
 
     @Override
-    public boolean deleteRecipe(int id) {
+    public boolean deleteRecipe(long id) {
         String sql = "DELETE FROM saved_recipe WHERE id = ?";
         int rowsAffected = jdbcTemplate.update(sql, id);
         return rowsAffected > 0;
@@ -222,8 +222,8 @@ public class SavedRecipeDAOImpl implements SavedRecipeDAO {
                         requestedIngredientsList
                     );
                     
-                    // Only consider recipes with at least 90% match
-                    if (matchScore >= 0.9) {
+                    // Only consider recipes with at least 80% match
+                    if (matchScore >= 0.8) {
                         recipeScores.put(recipeJson, matchScore);
                     }
                 }
@@ -317,6 +317,132 @@ public class SavedRecipeDAOImpl implements SavedRecipeDAO {
             recipe.setCuisine(rs.getString("cuisine"));
             recipe.setSavedTimeDate(rs.getTimestamp("saved_time_date").toLocalDateTime());
             return recipe;
+        }
+    }
+
+        // Add to SavedRecipeDAO class
+    public UserProfile getUserProfile(String uid, String mail) {
+        UserProfile profile = new UserProfile();
+        
+        try (Connection conn = jdbcTemplate.getDataSource().getConnection()) {
+            String sql = "SELECT * FROM profile WHERE uid = ? AND mail = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, uid);
+                stmt.setString(2, mail);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        profile.setUid(rs.getString("uid"));
+                        profile.setEmail(rs.getString("mail")); // Changed from "email" to "mail"
+                        profile.setDietaryPreference(rs.getString("diet_pref")); // Changed from "dietary_preference"
+                        profile.setAllergies(rs.getString("allergies"));
+                        
+                        // Set calorie goal based on body goal and BMI
+                        profile.setCalorieGoal(calculateCalorieGoal(
+                            rs.getDouble("weight"),
+                            rs.getDouble("height"),
+                            rs.getString("gender"),
+                            rs.getString("body_goal")
+                        ));
+                        
+                        profile.setHealthGoals(rs.getString("body_goal")); // Changed from "health_goals"
+                        
+                        // Set cuisine preferences (this field doesn't exist in your DB)
+                        profile.setCuisinePreferences("Not specified");
+                        profile.setCity(rs.getString("city"));
+                        profile.setCountry(rs.getString("country"));
+                    
+                        return profile;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+
+    // Helper method to calculate calorie goal based on user stats
+    private int calculateCalorieGoal(double weight, double height, String gender, String bodyGoal) {
+        // Basic BMR calculation (Mifflin-St Jeor Equation)
+        double bmr;
+        if ("Male".equalsIgnoreCase(gender)) {
+            bmr = 10 * weight + 6.25 * height - 5 * 30 + 5; // Age assumed 30 if not available
+        } else {
+            bmr = 10 * weight + 6.25 * height - 5 * 30 - 161; // Age assumed 30 if not available
+        }
+        
+        // Adjust based on body goal
+        if ("Weight loss".equalsIgnoreCase(bodyGoal)) {
+            return (int)(bmr * 0.8); // 20% deficit for weight loss
+        } else if ("Muscle gain".equalsIgnoreCase(bodyGoal)) {
+            return (int)(bmr * 1.2); // 20% surplus for muscle gain
+        } else {
+            return (int)bmr; // Maintenance
+        }
+    }
+
+    public void saveMealPlan(String uid, String mail, String mealPlanJson) {
+        try (Connection conn = jdbcTemplate.getDataSource().getConnection()) {
+            String sql = "INSERT INTO meal_plans (uid, email, meal_plan, created_at) VALUES (?, ?, ?, NOW())";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, uid);
+                stmt.setString(2, mail);
+                stmt.setString(3, mealPlanJson);
+                stmt.executeUpdate();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public List<Map<String, Object>> getUserMealPlans(String uid, String mail) {
+        List<Map<String, Object>> mealPlans = new ArrayList<>();
+        
+        try (Connection conn = jdbcTemplate.getDataSource().getConnection()) {
+            String sql = "SELECT id, uid, email, meal_plan, created_at FROM meal_plans WHERE uid = ? AND email = ? ORDER BY created_at DESC";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, uid);
+                stmt.setString(2, mail);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> mealPlanEntry = new HashMap<>();
+                        mealPlanEntry.put("id", rs.getInt("id"));
+                        mealPlanEntry.put("uid", rs.getString("uid"));
+                        mealPlanEntry.put("email", rs.getString("email"));
+                        mealPlanEntry.put("created_at", rs.getTimestamp("created_at").toString());
+                        
+                        // Parse the JSON string back to a Map
+                        String mealPlanJson = rs.getString("meal_plan");
+                        Map<String, Object> mealPlanData = objectMapper.readValue(mealPlanJson, Map.class);
+                        mealPlanEntry.put("meal_plan", mealPlanData);
+                        
+                        mealPlans.add(mealPlanEntry);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return mealPlans;
+    }
+
+    @Override
+    public boolean deleteMealPlan(long id) {
+        try (Connection conn = jdbcTemplate.getDataSource().getConnection()) {
+            String sql = "DELETE FROM meal_plans WHERE id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setLong(1, id);
+                int rowsAffected = stmt.executeUpdate();
+                return rowsAffected > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }

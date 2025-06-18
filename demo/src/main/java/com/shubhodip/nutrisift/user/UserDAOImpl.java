@@ -120,7 +120,7 @@ public class UserDAOImpl implements UserDAO {
             String sql = "SELECT * FROM profile WHERE mail = ?";
             return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
                 Profile profile = new Profile();
-                profile.setId(rs.getInt("id"));
+                profile.setId(rs.getLong("id"));
                 profile.setUid(rs.getString("uid"));
                 profile.setMail(rs.getString("mail"));
                 profile.setName(rs.getString("name"));
@@ -181,7 +181,7 @@ public class UserDAOImpl implements UserDAO {
         @Override
         public User mapRow(ResultSet rs, int rowNum) throws SQLException {
             User user = new User();
-            user.setId(rs.getInt("id"));
+            user.setId(rs.getLong("id"));
             user.setUserid(rs.getString("userid"));
             user.setName(rs.getString("name"));
             user.setEmail(rs.getString("email"));

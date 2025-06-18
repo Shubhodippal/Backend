@@ -1,4 +1,4 @@
-package com.shubhodip.nutrisift;
+package com.shubhodip.nutrisift.Grocery_list;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -77,7 +77,7 @@ public class GroceryListDAOImpl implements GroceryListDAO {
     }
 
     @Override
-    public boolean updateGroceryItem(int itemId, GroceryItem item) {
+    public boolean updateGroceryItem(long itemId, GroceryItem item) {
         try {
             String sql = "UPDATE grocery_list SET item_name = ?, quantity = ?, category = ?, state = ? " +
                          "WHERE id = ?";
@@ -99,7 +99,7 @@ public class GroceryListDAOImpl implements GroceryListDAO {
     }
 
     @Override
-    public boolean deleteGroceryItem(int itemId) {
+    public boolean deleteGroceryItem(long itemId) {
         try {
             String sql = "DELETE FROM grocery_list WHERE id = ?";
             int rowsAffected = jdbcTemplate.update(sql, itemId);
@@ -111,7 +111,7 @@ public class GroceryListDAOImpl implements GroceryListDAO {
     }
 
     @Override
-    public boolean toggleItemCheck(int itemId) {
+    public boolean toggleItemCheck(long itemId) {
         try {
             // First get the current state
             String getStateSql = "SELECT state FROM grocery_list WHERE id = ?";
@@ -135,7 +135,7 @@ public class GroceryListDAOImpl implements GroceryListDAO {
         @Override
         public GroceryItem mapRow(ResultSet rs, int rowNum) throws SQLException {
             GroceryItem item = new GroceryItem();
-            item.setId(rs.getInt("id"));
+            item.setId(rs.getLong("id"));
             item.setUid(rs.getString("uid"));
             item.setMail(rs.getString("mail"));
             item.setState(rs.getString("state"));

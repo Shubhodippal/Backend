@@ -3,7 +3,7 @@ package com.shubhodip.nutrisift.recipe;
 import java.time.LocalDateTime;
 
 public class SavedRecipe {
-    private int id;
+    private long id;
     private String uid;
     private String mail;
     private String prompt;
@@ -22,7 +22,7 @@ public class SavedRecipe {
     }
     
     // Getters and setters
-    public int getId() {
+    public long getId() {
         return id;
     }
     

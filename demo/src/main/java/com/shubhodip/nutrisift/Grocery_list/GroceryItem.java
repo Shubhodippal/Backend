@@ -1,9 +1,9 @@
-package com.shubhodip.nutrisift;
+package com.shubhodip.nutrisift.Grocery_list;
 
 import java.sql.Timestamp;
 
 public class GroceryItem {
-    private int id;
+    private long id;
     private String uid;
     private String mail;
     private String state;
@@ -29,7 +29,7 @@ public class GroceryItem {
     }
 
     // Full constructor
-    public GroceryItem(int id, String uid, String mail, String state, String itemName, 
+    public GroceryItem(long id, String uid, String mail, String state, String itemName, 
                       String quantity, String category, Timestamp creationTime) {
         this.id = id;
         this.uid = uid;
@@ -42,11 +42,11 @@ public class GroceryItem {
     }
 
     // Getters and setters
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 

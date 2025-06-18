@@ -3,7 +3,7 @@ package com.shubhodip.nutrisift.user;
 import java.sql.Date;
 
 public class Profile {
-    private int id;
+    private long id;
     private String uid;
     private String mail;
     private String name;
@@ -25,11 +25,11 @@ public class Profile {
     }
 
     // Getters and setters
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
