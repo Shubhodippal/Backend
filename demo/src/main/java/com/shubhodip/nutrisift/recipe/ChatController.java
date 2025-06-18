@@ -183,15 +183,7 @@ public class ChatController {
         try {
             // Check if user has exceeded daily search limit (3 per day)
             if (!apiUsageDAO.checkAndUpdateApiUsage(request.getUid(), request.getMail(), "search", 3)) {
-                List<Map<String, Object>> errorResponse = new ArrayList<>();
-                Map<String, Object> errorRecipe = new HashMap<>();
-                errorRecipe.put("id", 0);
-                errorRecipe.put("title", "Rate Limit Exceeded");
-                errorRecipe.put("ingredients", List.of());
-                errorRecipe.put("steps", List.of("You have reached the daily limit (3) for recipe searches. Please try again tomorrow."));
-                errorResponse.add(errorRecipe);
-                
-                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorResponse);
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate Limit Exceeded, You have reached the daily limit (3) for recipe searches. Please try again tomorrow.");
             }
             
             // Create search prompt for multiple recipes
@@ -386,9 +378,6 @@ public class ChatController {
     @PostMapping("/save")
     public ResponseEntity<?> saveRecipe(@RequestBody SavedRecipe request) {
         try {
-            // Track API usage without enforcing limits
-            apiUsageDAO.trackApiUsage(request.getUid(), request.getMail(), "save-recipe");
-            
             SavedRecipe recipe = new SavedRecipe();
             recipe.setUid(request.getUid());
             recipe.setMail(request.getMail());
@@ -418,9 +407,6 @@ public class ChatController {
     @GetMapping("/user/{uid}")
     public ResponseEntity<?> getUserRecipes(@PathVariable String uid) {
         try {
-            // Track API usage without enforcing limits - using only uid since we don't have email in this endpoint
-            apiUsageDAO.trackApiUsage(uid, "unknown", "get-user-recipes");
-            
             List<SavedRecipe> recipes = savedRecipeDAO.getRecipesByUserId(uid);
             return ResponseEntity.ok(recipes);
         } catch (Exception e) {
@@ -434,9 +420,6 @@ public class ChatController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getRecipeById(@PathVariable long id) {
         try {
-            // Track API usage with a generic "system" user since we don't have user info at this endpoint
-            apiUsageDAO.trackApiUsage("system", "system", "get-recipe-by-id");
-            
             SavedRecipe recipe = savedRecipeDAO.getRecipeById(id);
             if (recipe != null) {
                 return ResponseEntity.ok(recipe);
@@ -454,8 +437,6 @@ public class ChatController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteRecipe(@PathVariable long id) {
         try {
-            // Track API usage with a generic "system" user since we don't have user info
-            apiUsageDAO.trackApiUsage("system", "system", "delete-recipe");
             
             boolean deleted = savedRecipeDAO.deleteRecipe(id);
             if (deleted) {
@@ -738,8 +719,6 @@ public class ChatController {
     @GetMapping("/meal-plans/{uid}/{mail}")
     public ResponseEntity<?> getUserMealPlans(@PathVariable String uid, @PathVariable String mail) {
         try {
-            // Track API usage without enforcing limits
-            apiUsageDAO.trackApiUsage(uid, mail, "get-meal-plans");
             
             List<Map<String, Object>> mealPlans = savedRecipeDAO.getUserMealPlans(uid, mail);
             
@@ -762,8 +741,6 @@ public class ChatController {
     @DeleteMapping("/del_meal-plan/{id}")
     public ResponseEntity<?> deleteMealPlan(@PathVariable long id) {
         try {
-            // Track API usage with a generic "system" user
-            apiUsageDAO.trackApiUsage("system", "system", "delete-meal-plan");
             
             boolean deleted = savedRecipeDAO.deleteMealPlan(id);
             if (deleted) {

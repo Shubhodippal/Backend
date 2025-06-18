@@ -1,6 +1,8 @@
 package com.shubhodip.nutrisift.recipe;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ public class ApiUsageDAOImpl implements ApiUsageDAO {
     private JdbcTemplate jdbcTemplate;
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final ZoneId INDIAN_ZONE = ZoneId.of("Asia/Kolkata");
 
     @Override
     public int getApiUsageCount(String uid, String email, String endpoint, String date) {
@@ -56,7 +59,8 @@ public class ApiUsageDAOImpl implements ApiUsageDAO {
     @Override
     @Transactional
     public boolean checkAndUpdateApiUsage(String uid, String email, String endpoint, int limit) {
-        String today = LocalDate.now().format(DATE_FORMATTER);
+        // Get current date in Indian Standard Time
+        String today = ZonedDateTime.now(INDIAN_ZONE).toLocalDate().format(DATE_FORMATTER);
         int currentCount = getApiUsageCount(uid, email, endpoint, today);
         
         if (currentCount >= limit) {
@@ -70,7 +74,8 @@ public class ApiUsageDAOImpl implements ApiUsageDAO {
 
     @Override
     public void trackApiUsage(String uid, String email, String endpoint) {
-        String today = LocalDate.now().format(DATE_FORMATTER);
+        // Get current date in Indian Standard Time
+        String today = ZonedDateTime.now(INDIAN_ZONE).toLocalDate().format(DATE_FORMATTER);
         incrementApiUsage(uid, email, endpoint, today);
     }
 }

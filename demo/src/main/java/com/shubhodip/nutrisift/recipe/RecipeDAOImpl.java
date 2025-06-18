@@ -31,7 +31,8 @@ public class RecipeDAOImpl implements RecipeDAO {
     public int saveRecipe(SavedRecipe recipe) {
         try {
             // Validate required fields
-            if (recipe.getUid() == null || recipe.getMail() == null || recipe.getRecipeName() == null) {
+            System.out.println("Saving recipe: " + recipe.getUid()+recipe.getMail()+recipe.getRecipeName());
+            if (recipe.getUid() == null || recipe.getMail() == null) {
                 System.err.println("Error: Required fields missing. uid, mail and recipe_name cannot be null");
                 return 0;
             }
@@ -65,6 +66,9 @@ public class RecipeDAOImpl implements RecipeDAO {
             e.printStackTrace();
             
             // Try to provide more detailed error info
+            System.err.println(e.getClass().getName() + ": " + e.getMessage()   
+            + " | SQL State: " + (e instanceof SQLException ? ((SQLException)e).getSQLState() : "N/A"));
+            System.err.println("Name: "+recipe.getRecipeName());
             if (e.getMessage().contains("Data too long")) {
                 System.err.println("Data too long for column. Check field length limits.");
             } else if (e.getMessage().contains("cannot be null")) {
