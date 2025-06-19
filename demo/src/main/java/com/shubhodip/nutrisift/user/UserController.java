@@ -217,17 +217,9 @@ public class UserController {
             // First check if user exists
             User user = userDAO.getUserByEmail(email);
             if (user == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+                return ResponseEntity.ok(null);
             }
-            
-            Profile profile = userDAO.getProfileByEmail(email);
-            
-            /*if (profile == null) {
-                profile = new Profile();
-                profile.setMail(user.getEmail());
-                profile.setName(user.getName());
-            }*/
-            
+            Profile profile = userDAO.getProfileByEmail(email);            
             return ResponseEntity.ok(profile);
         } catch (Exception e) {
             e.printStackTrace();
