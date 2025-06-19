@@ -183,7 +183,9 @@ public class ChatController {
         try {
             // Check if user has exceeded daily search limit (3 per day)
             if (!apiUsageDAO.checkAndUpdateApiUsage(request.getUid(), request.getMail(), "search", 3)) {
-                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate Limit Exceeded, You have reached the daily limit (3) for recipe searches. Please try again tomorrow.");
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Rate Limit Exceeded, You have reached the daily limit (3) for recipe searches. Please try again tomorrow.");
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorResponse);
             }
             
             // Create search prompt for multiple recipes
